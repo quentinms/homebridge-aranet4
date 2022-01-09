@@ -1,16 +1,16 @@
 {
   "private": true,
-  "displayName": "Plugin Name",
-  "name": "homebridge-plugin-name",
+  "displayName": "Aranet4",
+  "name": "homebridge-aranet4",
   "version": "1.0.0",
-  "description": "A short description about what your plugin does.",
+  "description": "An Homebridge plugin to get data from an Aranet4.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git://github.com/USERNAME/GITHUB_PROJECT_NAME.git"
+    "url": "git://github.com/quentinms/homebridge-aranet4.git"
   },
   "bugs": {
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME/issues"
+    "url": "https://github.com/quentinms/homebridge-aranet4/issues"
   },
   "engines": {
     "node": ">=14.18.1",
