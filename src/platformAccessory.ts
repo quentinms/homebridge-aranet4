@@ -1,6 +1,7 @@
 import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 
-import { ExampleHomebridgePlatform } from './platform';
+import { Aranet4Platform } from './platform';
+import noble from '@abandonware/noble';
 
 /**
  * Platform Accessory
@@ -8,19 +9,13 @@ import { ExampleHomebridgePlatform } from './platform';
  * Each accessory may expose multiple services of different service types.
  */
 export class ExamplePlatformAccessory {
-  private service: Service;
+  private humidityService: Service;
+  private temperatureService: Service;
+  private co2Service: Service;
 
-  /**
-   * These are just used to create a working example
-   * You should implement your own code to track the state of your accessory
-   */
-  private exampleStates = {
-    On: false,
-    Brightness: 100,
-  };
 
   constructor(
-    private readonly platform: ExampleHomebridgePlatform,
+    private readonly platform: Aranet4Platform,
     private readonly accessory: PlatformAccessory,
   ) {
 
@@ -32,23 +27,34 @@ export class ExamplePlatformAccessory {
 
     // get the LightBulb service if it exists, otherwise create a new LightBulb service
     // you can create multiple services for each accessory
-    this.service = this.accessory.getService(this.platform.Service.Lightbulb) || this.accessory.addService(this.platform.Service.Lightbulb);
+    // this.service = this.accessory.getService(this.platform.Service.Lightbulb) || this.accessory.addService(this.platform.Service.Lightbulb);
+
+    this.humidityService = this.accessory.getService(this.platform.Service.HumiditySensor) ||
+      this.accessory.addService(this.platform.Service.HumiditySensor);
+
+    this.temperatureService = this.accessory.getService(this.platform.Service.TemperatureSensor) ||
+      this.accessory.addService(this.platform.Service.TemperatureSensor);
+
+    this.co2Service = this.accessory.getService(this.platform.Service.CarbonDioxideSensor) ||
+      this.accessory.addService(this.platform.Service.CarbonDioxideSensor);
+
 
     // set the service name, this is what is displayed as the default name on the Home app
     // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
-    this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.exampleDisplayName);
+    // this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.exampleDisplayName);
 
     // each service must implement at-minimum the "required characteristics" for the given service type
     // see https://developers.homebridge.io/#/service/Lightbulb
 
     // register handlers for the On/Off Characteristic
-    this.service.getCharacteristic(this.platform.Characteristic.On)
-      .onSet(this.setOn.bind(this))                // SET - bind to the `setOn` method below
-      .onGet(this.getOn.bind(this));               // GET - bind to the `getOn` method below
+    // this.service.getCharacteristic(this.platform.Characteristic.On)
+    //   .onSet(this.setOn.bind(this))                // SET - bind to the `setOn` method below
+    //   .onGet(this.getOn.bind(this));               // GET - bind to the `getOn` method below
+
 
     // register handlers for the Brightness Characteristic
-    this.service.getCharacteristic(this.platform.Characteristic.Brightness)
-      .onSet(this.setBrightness.bind(this));       // SET - bind to the 'setBrightness` method below
+    // this.service.getCharacteristic(this.platform.Characteristic.Brightness)
+    //   .onSet(this.setBrightness.bind(this));       // SET - bind to the 'setBrightness` method below
 
     /**
      * Creating multiple services of the same type.
@@ -62,11 +68,11 @@ export class ExamplePlatformAccessory {
      */
 
     // Example: add two "motion sensor" services to the accessory
-    const motionSensorOneService = this.accessory.getService('Motion Sensor One Name') ||
-      this.accessory.addService(this.platform.Service.MotionSensor, 'Motion Sensor One Name', 'YourUniqueIdentifier-1');
+    // const motionSensorOneService = this.accessory.getService('Motion Sensor One Name') ||
+    //   this.accessory.addService(this.platform.Service.MotionSensor, 'Motion Sensor One Name', 'YourUniqueIdentifier-1');
 
-    const motionSensorTwoService = this.accessory.getService('Motion Sensor Two Name') ||
-      this.accessory.addService(this.platform.Service.MotionSensor, 'Motion Sensor Two Name', 'YourUniqueIdentifier-2');
+    // const motionSensorTwoService = this.accessory.getService('Motion Sensor Two Name') ||
+    //   this.accessory.addService(this.platform.Service.MotionSensor, 'Motion Sensor Two Name', 'YourUniqueIdentifier-2');
 
     /**
      * Updating characteristics values asynchronously.
@@ -77,65 +83,82 @@ export class ExamplePlatformAccessory {
      * the `updateCharacteristic` method.
      *
      */
-    let motionDetected = false;
-    setInterval(() => {
-      // EXAMPLE - inverse the trigger
-      motionDetected = !motionDetected;
+    setInterval(async () => {
+      try {
+        const data = await this.getHumidity();
 
-      // push the new value to HomeKit
-      motionSensorOneService.updateCharacteristic(this.platform.Characteristic.MotionDetected, motionDetected);
-      motionSensorTwoService.updateCharacteristic(this.platform.Characteristic.MotionDetected, !motionDetected);
+        // push the new value to HomeKit
+        this.humidityService.updateCharacteristic(this.platform.Characteristic.CurrentRelativeHumidity, data.humidity);
+        this.temperatureService.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, data.temperature);
 
-      this.platform.log.debug('Triggering motionSensorOneService:', motionDetected);
-      this.platform.log.debug('Triggering motionSensorTwoService:', !motionDetected);
-    }, 10000);
+        const level = this.platform.Characteristic.CarbonDioxideDetected.CO2_LEVELS_NORMAL;
+        if (data.co2 >= 900) { // TODO: settings
+          this.platform.Characteristic.CarbonDioxideDetected.CO2_LEVELS_ABNORMAL;
+        }
+
+        this.co2Service.updateCharacteristic(this.platform.Characteristic.CarbonDioxideDetected, level);
+        this.co2Service.updateCharacteristic(this.platform.Characteristic.CarbonDioxideLevel, data.co2);
+
+        this.platform.log.debug('Updated data:', data);
+      } catch (err) {
+        this.platform.log.debug('could not update sensor data');
+      }
+    }, 300000);
   }
 
-  /**
-   * Handle "SET" requests from HomeKit
-   * These are sent when the user changes the state of an accessory, for example, turning on a Light bulb.
-   */
-  async setOn(value: CharacteristicValue) {
-    // implement your own code to turn your device on/off
-    this.exampleStates.On = value as boolean;
+  ARANET4_SERVICE = 'f0cd140095da4f4b9ac8aa55d312af0c';
+  ARANET4_CHARACTERISTICS = 'f0cd300195da4f4b9ac8aa55d312af0c';
 
-    this.platform.log.debug('Set Characteristic On ->', value);
+  async getHumidity(): Promise<AranetData> { // TODO: put that function in library
+    this.platform.log.debug(noble.state);
+    if (noble.state === 'poweredOn') {
+      this.platform.log.debug('Starting to scan...');
+      await noble.startScanningAsync([this.ARANET4_SERVICE], false);
+      const res = await this.getSensorData();
+      return res;
+    }
+    return Promise.reject('not ready');
   }
 
-  /**
-   * Handle the "GET" requests from HomeKit
-   * These are sent when HomeKit wants to know the current state of the accessory, for example, checking if a Light bulb is on.
-   *
-   * GET requests should return as fast as possbile. A long delay here will result in
-   * HomeKit being unresponsive and a bad user experience in general.
-   *
-   * If your device takes time to respond you should update the status of your device
-   * asynchronously instead using the `updateCharacteristic` method instead.
+  async getSensorData(): Promise<AranetData> {
+    return new Promise((resolve, reject) => {
+      noble.once('discover', async (peripheral) => {
+        this.platform.log.debug('Found Aranet4');
+        await peripheral.connectAsync();
 
-   * @example
-   * this.service.updateCharacteristic(this.platform.Characteristic.On, true)
-   */
-  async getOn(): Promise<CharacteristicValue> {
-    // implement your own code to check if the device is on
-    const isOn = this.exampleStates.On;
+        this.platform.log.debug('Connected to Aranet4');
+        await noble.stopScanningAsync();
 
-    this.platform.log.debug('Get Characteristic On ->', isOn);
+        const { characteristics } = await peripheral.discoverSomeServicesAndCharacteristicsAsync(
+          [this.ARANET4_SERVICE], [this.ARANET4_CHARACTERISTICS],
+        );
+        if (characteristics.length === 0) {
+          reject('Could not find matching characteristic');
+        }
 
-    // if you need to return an error to show the device as "Not Responding" in the Home app:
-    // throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
+        const data = await characteristics[0].readAsync();
+        // From the official repo: https://github.com/SAF-Tehnika-Developer/com.aranet4/blob/54ec587f49cdece2236528edf0b871c259eb220c/app.js#L175-L182
+        const results = {
+          'co2': data.readUInt16LE(0),
+          'temperature': data.readUInt16LE(2) / 20,
+          'pressure': data.readUInt16LE(4) / 10,
+          'humidity': data.readUInt8(6),
+          'battery': data.readUInt8(7),
+        };
 
-    return isOn;
-  }
-
-  /**
-   * Handle "SET" requests from HomeKit
-   * These are sent when the user changes the state of an accessory, for example, changing the Brightness
-   */
-  async setBrightness(value: CharacteristicValue) {
-    // implement your own code to set the brightness
-    this.exampleStates.Brightness = value as number;
-
-    this.platform.log.debug('Set Characteristic Brightness -> ', value);
+        await peripheral.disconnectAsync();
+        resolve(results);
+      });
+    });
   }
 
 }
+
+type AranetData = {
+  co2: number;
+  temperature: number;
+  pressure: number;
+  humidity: number;
+  battery: number;
+};
+
