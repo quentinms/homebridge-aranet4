@@ -1,4 +1,4 @@
-import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
+import { Service, PlatformAccessory } from 'homebridge';
 
 import { Aranet4Platform } from './platform';
 import noble from '@abandonware/noble';
@@ -27,7 +27,8 @@ export class ExamplePlatformAccessory {
 
     // get the LightBulb service if it exists, otherwise create a new LightBulb service
     // you can create multiple services for each accessory
-    // this.service = this.accessory.getService(this.platform.Service.Lightbulb) || this.accessory.addService(this.platform.Service.Lightbulb);
+    // this.service = this.accessory.getService(this.platform.Service.Lightbulb) ||
+    // this.accessory.addService(this.platform.Service.Lightbulb);
 
     this.humidityService = this.accessory.getService(this.platform.Service.HumiditySensor) ||
       this.accessory.addService(this.platform.Service.HumiditySensor);
@@ -137,7 +138,8 @@ export class ExamplePlatformAccessory {
         }
 
         const data = await characteristics[0].readAsync();
-        // From the official repo: https://github.com/SAF-Tehnika-Developer/com.aranet4/blob/54ec587f49cdece2236528edf0b871c259eb220c/app.js#L175-L182
+        // From the official repo:
+        // https://github.com/SAF-Tehnika-Developer/com.aranet4/blob/54ec587f49cdece2236528edf0b871c259eb220c/app.js#L175-L182
         const results = {
           'co2': data.readUInt16LE(0),
           'temperature': data.readUInt16LE(2) / 20,
