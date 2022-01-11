@@ -8,9 +8,12 @@ import noble from '@abandonware/noble';
  * An instance of this class is created for each accessory your platform registers
  * Each accessory may expose multiple services of different service types.
  */
-export class ExamplePlatformAccessory {
+export class Aranet4Accessory {
+  // https://developers.homebridge.io/#/service/HumiditySensor
   private humidityService: Service;
+  // https://developers.homebridge.io/#/service/TemperatureSensor
   private temperatureService: Service;
+  // https://developers.homebridge.io/#/service/CarbonDioxideSensor
   private co2Service: Service;
 
 
@@ -21,14 +24,9 @@ export class ExamplePlatformAccessory {
 
     // set accessory information
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
-      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Default-Manufacturer')
-      .setCharacteristic(this.platform.Characteristic.Model, 'Default-Model')
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, 'Default-Serial');
-
-    // get the LightBulb service if it exists, otherwise create a new LightBulb service
-    // you can create multiple services for each accessory
-    // this.service = this.accessory.getService(this.platform.Service.Lightbulb) ||
-    // this.accessory.addService(this.platform.Service.Lightbulb);
+      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Default-Manufacturer') // TODO
+      .setCharacteristic(this.platform.Characteristic.Model, 'Default-Model') // TODO
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, 'Default-Serial'); // TODO
 
     this.humidityService = this.accessory.getService(this.platform.Service.HumiditySensor) ||
       this.accessory.addService(this.platform.Service.HumiditySensor);
@@ -47,15 +45,6 @@ export class ExamplePlatformAccessory {
     // each service must implement at-minimum the "required characteristics" for the given service type
     // see https://developers.homebridge.io/#/service/Lightbulb
 
-    // register handlers for the On/Off Characteristic
-    // this.service.getCharacteristic(this.platform.Characteristic.On)
-    //   .onSet(this.setOn.bind(this))                // SET - bind to the `setOn` method below
-    //   .onGet(this.getOn.bind(this));               // GET - bind to the `getOn` method below
-
-
-    // register handlers for the Brightness Characteristic
-    // this.service.getCharacteristic(this.platform.Characteristic.Brightness)
-    //   .onSet(this.setBrightness.bind(this));       // SET - bind to the 'setBrightness` method below
 
     /**
      * Creating multiple services of the same type.
@@ -84,12 +73,26 @@ export class ExamplePlatformAccessory {
      * the `updateCharacteristic` method.
      *
      */
-    setInterval(async () => {
+    setInterval(async () => { // TODO: run on start in addition to interval
       try {
-        const data = await this.getHumidity();
+        const data = await this.getLatestData();
+
+        if (data.battery <= 10) { // TODO: config
+          this.humidityService.updateCharacteristic(
+            this.platform.Characteristic.StatusLowBattery, this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW,
+          );
+          this.temperatureService.updateCharacteristic(
+            this.platform.Characteristic.StatusLowBattery, this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW,
+          );
+          this.co2Service.updateCharacteristic(
+            this.platform.Characteristic.StatusLowBattery, this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW,
+          );
+        }
 
         // push the new value to HomeKit
         this.humidityService.updateCharacteristic(this.platform.Characteristic.CurrentRelativeHumidity, data.humidity);
+
+
         this.temperatureService.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, data.temperature);
 
         const level = this.platform.Characteristic.CarbonDioxideDetected.CO2_LEVELS_NORMAL;
@@ -104,13 +107,13 @@ export class ExamplePlatformAccessory {
       } catch (err) {
         this.platform.log.debug('could not update sensor data');
       }
-    }, 300000);
+    }, 300_000);
   }
 
   ARANET4_SERVICE = 'f0cd140095da4f4b9ac8aa55d312af0c';
   ARANET4_CHARACTERISTICS = 'f0cd300195da4f4b9ac8aa55d312af0c';
 
-  async getHumidity(): Promise<AranetData> { // TODO: put that function in library
+  async getLatestData(): Promise<AranetData> { // TODO: put that function in library
     this.platform.log.debug(noble.state);
     if (noble.state === 'poweredOn') {
       this.platform.log.debug('Starting to scan...');

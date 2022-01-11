@@ -1,7 +1,7 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
-import { ExamplePlatformAccessory } from './platformAccessory';
+import { Aranet4Accessory } from './platformAccessory';
 
 /**
  * HomebridgePlatform
@@ -54,15 +54,11 @@ export class Aranet4Platform implements DynamicPlatformPlugin {
     // EXAMPLE ONLY
     // A real plugin you would discover accessories from the local network, cloud services
     // or a user-defined array in the platform config.
-    const exampleDevices = [
+    const exampleDevices = [ // TODO: get real devices
       {
         exampleUniqueId: 'ABCDE',
-        exampleDisplayName: 'Salon',
+        exampleDisplayName: 'Aranet4 #1',
       },
-      // {
-      //   exampleUniqueId: 'EFGH',
-      //   exampleDisplayName: 'Kitchen',
-      // },
     ];
 
     // loop over the discovered devices and register each one if it has not already been registered
@@ -87,7 +83,7 @@ export class Aranet4Platform implements DynamicPlatformPlugin {
 
         // create the accessory handler for the restored accessory
         // this is imported from `platformAccessory.ts`
-        new ExamplePlatformAccessory(this, existingAccessory);
+        new Aranet4Accessory(this, existingAccessory);
 
         // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
         // remove platform accessories when no longer present
@@ -106,7 +102,7 @@ export class Aranet4Platform implements DynamicPlatformPlugin {
 
         // create the accessory handler for the newly create accessory
         // this is imported from `platformAccessory.ts`
-        new ExamplePlatformAccessory(this, accessory);
+        new Aranet4Accessory(this, accessory);
 
         // link the accessory to your platform
         this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
