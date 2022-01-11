@@ -1,8 +1,7 @@
 {
-  "private": true,
   "displayName": "Aranet4",
   "name": "homebridge-aranet4",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "An Homebridge plugin to get data from an Aranet4.",
   "license": "Apache-2.0",
   "repository": {
