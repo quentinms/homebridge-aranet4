@@ -77,17 +77,19 @@ export class Aranet4Accessory {
       try {
         const data = await this.getLatestData();
 
+        let batteryLevel = this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL;
         if (data.battery <= 10) { // TODO: config
-          this.humidityService.updateCharacteristic(
-            this.platform.Characteristic.StatusLowBattery, this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW,
-          );
-          this.temperatureService.updateCharacteristic(
-            this.platform.Characteristic.StatusLowBattery, this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW,
-          );
-          this.co2Service.updateCharacteristic(
-            this.platform.Characteristic.StatusLowBattery, this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW,
-          );
+          batteryLevel = this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW;
         }
+        this.humidityService.updateCharacteristic(
+          this.platform.Characteristic.StatusLowBattery, batteryLevel,
+        );
+        this.temperatureService.updateCharacteristic(
+          this.platform.Characteristic.StatusLowBattery, batteryLevel,
+        );
+        this.co2Service.updateCharacteristic(
+          this.platform.Characteristic.StatusLowBattery, batteryLevel,
+        );
 
         // push the new value to HomeKit
         this.humidityService.updateCharacteristic(this.platform.Characteristic.CurrentRelativeHumidity, data.humidity);
