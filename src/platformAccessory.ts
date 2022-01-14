@@ -1,7 +1,7 @@
 import { Service, PlatformAccessory } from 'homebridge';
 
 import { Aranet4Platform } from './platform';
-import noble from '@abandonware/noble';
+import { Aranet4Device, AranetData } from './aranet';
 
 /**
  * Platform Accessory
@@ -16,17 +16,20 @@ export class Aranet4Accessory {
   // https://developers.homebridge.io/#/service/CarbonDioxideSensor
   private co2Service: Service;
 
+  private readonly services: Service[];
 
   constructor(
     private readonly platform: Aranet4Platform,
     private readonly accessory: PlatformAccessory,
+    private readonly device: Aranet4Device,
   ) {
 
     // set accessory information
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
-      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Default-Manufacturer') // TODO
-      .setCharacteristic(this.platform.Characteristic.Model, 'Default-Model') // TODO
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, 'Default-Serial'); // TODO
+      .setCharacteristic(this.platform.Characteristic.Manufacturer, device.info.manufacturer)
+      .setCharacteristic(this.platform.Characteristic.Model, device.info.modelNumber)
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, device.info.serialNumber)
+      .setCharacteristic(this.platform.Characteristic.FirmwareRevision, device.info.firmwareRevision);
 
     this.humidityService = this.accessory.getService(this.platform.Service.HumiditySensor) ||
       this.accessory.addService(this.platform.Service.HumiditySensor);
@@ -37,6 +40,11 @@ export class Aranet4Accessory {
     this.co2Service = this.accessory.getService(this.platform.Service.CarbonDioxideSensor) ||
       this.accessory.addService(this.platform.Service.CarbonDioxideSensor);
 
+    this.services = [
+      this.humidityService,
+      this.temperatureService,
+      this.co2Service,
+    ];
 
     // set the service name, this is what is displayed as the default name on the Home app
     // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
@@ -73,99 +81,48 @@ export class Aranet4Accessory {
      * the `updateCharacteristic` method.
      *
      */
-    setInterval(async () => { // TODO: run on start in addition to interval
+    setInterval(async () => {
+      await this.updateSensorData();
+    }, 30_000); //TODO: config
+  }
+
+  async updateSensorData() {
+    try {
+      let data: AranetData;
       try {
-        const data = await this.getLatestData();
-
-        let batteryLevel = this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL;
-        if (data.battery <= 10) { // TODO: config
-          batteryLevel = this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW;
-        }
-        this.humidityService.updateCharacteristic(
-          this.platform.Characteristic.StatusLowBattery, batteryLevel,
-        );
-        this.temperatureService.updateCharacteristic(
-          this.platform.Characteristic.StatusLowBattery, batteryLevel,
-        );
-        this.co2Service.updateCharacteristic(
-          this.platform.Characteristic.StatusLowBattery, batteryLevel,
-        );
-
-        // push the new value to HomeKit
-        this.humidityService.updateCharacteristic(this.platform.Characteristic.CurrentRelativeHumidity, data.humidity);
-
-
-        this.temperatureService.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, data.temperature);
-
-        const level = this.platform.Characteristic.CarbonDioxideDetected.CO2_LEVELS_NORMAL;
-        if (data.co2 >= 900) { // TODO: settings
-          this.platform.Characteristic.CarbonDioxideDetected.CO2_LEVELS_ABNORMAL;
-        }
-
-        this.co2Service.updateCharacteristic(this.platform.Characteristic.CarbonDioxideDetected, level);
-        this.co2Service.updateCharacteristic(this.platform.Characteristic.CarbonDioxideLevel, data.co2);
-
-        this.platform.log.debug('Updated data:', data);
+        data = await this.device.getSensorData();
       } catch (err) {
-        this.platform.log.debug('could not update sensor data');
+        this.platform.log.error('could not get sensor data ' + err);
+        return;
       }
-    }, 300_000);
-  }
 
-  ARANET4_SERVICE = 'f0cd140095da4f4b9ac8aa55d312af0c';
-  ARANET4_CHARACTERISTICS = 'f0cd300195da4f4b9ac8aa55d312af0c';
-
-  async getLatestData(): Promise<AranetData> { // TODO: put that function in library
-    this.platform.log.debug(noble.state);
-    if (noble.state === 'poweredOn') {
-      this.platform.log.debug('Starting to scan...');
-      await noble.startScanningAsync([this.ARANET4_SERVICE], false);
-      const res = await this.getSensorData();
-      return res;
-    }
-    return Promise.reject('not ready');
-  }
-
-  async getSensorData(): Promise<AranetData> {
-    return new Promise((resolve, reject) => {
-      noble.once('discover', async (peripheral) => {
-        this.platform.log.debug('Found Aranet4');
-        await peripheral.connectAsync();
-
-        this.platform.log.debug('Connected to Aranet4');
-        await noble.stopScanningAsync();
-
-        const { characteristics } = await peripheral.discoverSomeServicesAndCharacteristicsAsync(
-          [this.ARANET4_SERVICE], [this.ARANET4_CHARACTERISTICS],
+      let batteryLevel = this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL;
+      if (data.battery <= 10) { // TODO: config
+        batteryLevel = this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW;
+      }
+      this.services.forEach(s => {
+        s.updateCharacteristic(
+          this.platform.Characteristic.StatusLowBattery,
+          batteryLevel,
         );
-        if (characteristics.length === 0) {
-          reject('Could not find matching characteristic');
-        }
-
-        const data = await characteristics[0].readAsync();
-        // From the official repo:
-        // https://github.com/SAF-Tehnika-Developer/com.aranet4/blob/54ec587f49cdece2236528edf0b871c259eb220c/app.js#L175-L182
-        const results = {
-          'co2': data.readUInt16LE(0),
-          'temperature': data.readUInt16LE(2) / 20,
-          'pressure': data.readUInt16LE(4) / 10,
-          'humidity': data.readUInt8(6),
-          'battery': data.readUInt8(7),
-        };
-
-        await peripheral.disconnectAsync();
-        resolve(results);
       });
-    });
+
+      // push the new value to HomeKit
+      this.humidityService.updateCharacteristic(this.platform.Characteristic.CurrentRelativeHumidity, data.humidity);
+
+      this.temperatureService.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, data.temperature);
+
+      const level = this.platform.Characteristic.CarbonDioxideDetected.CO2_LEVELS_NORMAL;
+      if (data.co2 >= 900) { // TODO: settings
+        this.platform.Characteristic.CarbonDioxideDetected.CO2_LEVELS_ABNORMAL;
+      }
+
+      this.co2Service.updateCharacteristic(this.platform.Characteristic.CarbonDioxideDetected, level);
+      this.co2Service.updateCharacteristic(this.platform.Characteristic.CarbonDioxideLevel, data.co2);
+
+      this.platform.log.debug('Updated data:', data);
+    } catch (err) {
+      this.platform.log.error('could not update sensor data: ', err);
+    }
   }
-
 }
-
-type AranetData = {
-  co2: number;
-  temperature: number;
-  pressure: number;
-  humidity: number;
-  battery: number;
-};
-
