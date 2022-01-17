@@ -113,12 +113,12 @@ export class Aranet4Accessory {
 
       this.temperatureService.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, data.temperature);
 
-      const level = this.platform.Characteristic.CarbonDioxideDetected.CO2_LEVELS_NORMAL;
+      let co2level = this.platform.Characteristic.CarbonDioxideDetected.CO2_LEVELS_NORMAL;
       if (data.co2 >= this.platform.config.co2AlertThreshold) {
-        this.platform.Characteristic.CarbonDioxideDetected.CO2_LEVELS_ABNORMAL;
+        co2level = this.platform.Characteristic.CarbonDioxideDetected.CO2_LEVELS_ABNORMAL;
       }
 
-      this.co2Service.updateCharacteristic(this.platform.Characteristic.CarbonDioxideDetected, level);
+      this.co2Service.updateCharacteristic(this.platform.Characteristic.CarbonDioxideDetected, co2level);
       this.co2Service.updateCharacteristic(this.platform.Characteristic.CarbonDioxideLevel, data.co2);
 
       this.platform.log.debug('Updated data:', data);
