@@ -23,6 +23,7 @@ export class Aranet4Platform implements DynamicPlatformPlugin {
     public readonly api: API,
   ) {
     this.log.debug('Finished initializing platform:', this.config.name);
+    this.log.debug('Configs:', JSON.stringify(this.config));
 
     // When this event is fired it means Homebridge has restored all cached accessories from disk.
     // Dynamic Platform plugins should only register new accessories after this event was fired,
@@ -55,7 +56,11 @@ export class Aranet4Platform implements DynamicPlatformPlugin {
 
     let devices: Aranet4Device[] = [];
     try {
-      devices = await Aranet4Device.getAranet4Devices(this.log);
+      devices = await Aranet4Device.getAranet4Devices(
+        this.log,
+        this.config.bluetoothReadyTimeout,
+        this.config.bluetoothDeviceSearchTimeout,
+      );
     } catch (err) {
       this.log.error('errored while getting devices:' + err);
       return;

@@ -53,11 +53,11 @@ export class Aranet4Device {
     this.info = info;
   }
 
-  static async waitForBluetooth(logger: Logger) {
+  static async waitForBluetooth(logger: Logger, timeout: number) {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         reject(new Error('Bluetooth is not ready'));
-      }, 10000); // TODO: config
+      }, timeout * 1000);
 
       if (noble.state === 'poweredOn') {
         return resolve(true);
@@ -79,10 +79,10 @@ export class Aranet4Device {
     }
   }
 
-  static async getAranet4Devices(logger: Logger): Promise<Aranet4Device[]> {
+  static async getAranet4Devices(logger: Logger, btReadyTimeout: number, btScanTimeout: number): Promise<Aranet4Device[]> {
     const devices: Aranet4Device[] = [];
 
-    await this.waitForBluetooth(logger);
+    await this.waitForBluetooth(logger, btReadyTimeout);
     logger.debug('Starting to scan...');
     await noble.startScanningAsync([ARANET4_SERVICE], false);
 
@@ -93,7 +93,7 @@ export class Aranet4Device {
           return reject(new Error('Did not find any devices'));
         }
         return resolve(devices);
-      }, 10000); // TODO: config
+      }, btScanTimeout * 1000);
 
       noble.on('discover', async (peripheral) => {
         logger.debug('Found Aranet4 peripheral', peripheral.uuid);
@@ -149,8 +149,8 @@ export class Aranet4Device {
     });
   }
 
-  async getSensorData(): Promise<AranetData> {
-    await Aranet4Device.waitForBluetooth(this.logger);
+  async getSensorData(btReadyTimeout: number): Promise<AranetData> {
+    await Aranet4Device.waitForBluetooth(this.logger, btReadyTimeout);
     await this.waitForPeripheral();
     this.logger.debug('Connected to Aranet4', this.peripheral.uuid);
 
