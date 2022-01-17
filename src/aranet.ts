@@ -5,7 +5,6 @@ import {Logger} from 'homebridge';
 const ARANET4_SERVICE = 'f0cd140095da4f4b9ac8aa55d312af0c';
 const ARANET4_CHARACTERISTICS = 'f0cd300195da4f4b9ac8aa55d312af0c';
 
-
 const MANUFACTURER_NAME = { name: 'org.bluetooth.characteristic.manufacturer_name_string', id: '2a29' };
 const MODEL_NUMBER = { name: 'org.bluetooth.characteristic.model_number_string', id: '2a24' };
 const SERIAL_NUMBER = { name: 'org.bluetooth.characteristic.serial_number_string', id: '2a25' };
@@ -23,8 +22,6 @@ const BLUETOOTH_CHARACTERISTICS = [
   SOFTWARE_REVISION,
 ].map(c => c.id);
 
-
-
 export type Aranet4DeviceInfo = {
   manufacturer: string;
   modelNumber: string;
@@ -41,7 +38,6 @@ export type AranetData = {
   humidity: number;
   battery: number;
 };
-
 
 export class Aranet4Device {
   private readonly logger: Logger;
@@ -63,6 +59,9 @@ export class Aranet4Device {
         reject(new Error('Bluetooth is not ready'));
       }, 10000); // TODO: config
 
+      if (noble.state === 'poweredOn') {
+        return resolve(true);
+      }
 
       noble.on('stateChange', async (state) => {
         logger.debug(state);
@@ -70,10 +69,6 @@ export class Aranet4Device {
           return resolve(true);
         }
       });
-
-      if (noble.state === 'poweredOn') {
-        return resolve(true);
-      }
     });
   }
 
@@ -112,7 +107,6 @@ export class Aranet4Device {
         });
 
         await device.waitForPeripheral();
-
         logger.debug('Connected to peripheral', peripheral.uuid);
 
         const { characteristics } = await peripheral.discoverSomeServicesAndCharacteristicsAsync(
@@ -147,6 +141,7 @@ export class Aranet4Device {
               break;
           }
         }));
+
         logger.debug('Found device', device.info.serialNumber);
         devices.push(device);
         await peripheral.disconnectAsync();
