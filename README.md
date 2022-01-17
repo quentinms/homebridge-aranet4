@@ -1,3 +1,13 @@
+# Homebridge-Aranet4
+
+A Homebridge plugin for [Aranet4](https://aranet4.com/) devices.
+
+It reports the CO2 level, humidity and temperature and the device's battery into HomeKit.
+
+It's very much in beta currently (I've only tested this with a single device, on macOS).
+If you run into problems, please open an issue.
+
+------
 
 <p align="center">
 
