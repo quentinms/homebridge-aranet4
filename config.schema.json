@@ -9,7 +9,52 @@
         "title": "Name",
         "type": "string",
         "required": true,
-        "default": "Example Dynamic Platform"
+        "default": "Aranet4 Platform"
+      },
+      "co2AlertThreshold": {
+        "title": "CO2 Alert Threshold",
+        "description": "When to consider that the CO2 level is too high (in ppm).",
+        "type": "integer",
+        "required": true,
+        "default": 1400,
+        "minimum": 0,
+        "maximum": 2000
+      },
+      "batteryAlertThreshold": {
+        "title": "Battery Alert Threshold",
+        "description": "When to consider that the battery is low (in %).",
+        "type": "integer",
+        "required": true,
+        "default": 10,
+        "minimum": 0,
+        "maximum": 100
+      },
+      "sensorDataRefreshInterval": {
+        "title": "Sensor Data Refresh Interval",
+        "description": "How often we should get data from the sensor (in seconds).",
+        "type": "integer",
+        "required": true,
+        "default": 300,
+        "minimum": 0,
+        "maximum": 3600
+      },
+      "bluetoothReadyTimeout": {
+        "title": "Bluetooth Ready Timeout",
+        "description": "How long to wait for Bluetooth to be ready (in seconds)",
+        "type": "integer",
+        "required": true,
+        "default": 10,
+        "minimum": 0,
+        "maximum": 60
+      },
+      "bluetoothDeviceSearchTimeout": {
+        "title": "Bluetooth Device Search Timeout",
+        "description": "How long to wait for Bluetooth device discovery (in seconds).",
+        "type": "integer",
+        "required": true,
+        "default": 10,
+        "minimum": 0,
+        "maximum": 60
       }
     }
   }

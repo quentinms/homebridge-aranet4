@@ -81,23 +81,24 @@ export class Aranet4Accessory {
      * the `updateCharacteristic` method.
      *
      */
+
     setInterval(async () => {
       await this.updateSensorData();
-    }, 30_000); //TODO: config
+    }, this.platform.config.sensorDataRefreshInterval * 1000);
   }
 
   async updateSensorData() {
     try {
       let data: AranetData;
       try {
-        data = await this.device.getSensorData();
+        data = await this.device.getSensorData(this.platform.config.bluetoothReadyTimeout);
       } catch (err) {
         this.platform.log.error('could not get sensor data ' + err);
         return;
       }
 
       let batteryLevel = this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL;
-      if (data.battery <= 10) { // TODO: config
+      if (data.battery <= this.platform.config.batteryAlertThreshold) {
         batteryLevel = this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW;
       }
       this.services.forEach(s => {
@@ -113,7 +114,7 @@ export class Aranet4Accessory {
       this.temperatureService.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, data.temperature);
 
       const level = this.platform.Characteristic.CarbonDioxideDetected.CO2_LEVELS_NORMAL;
-      if (data.co2 >= 900) { // TODO: settings
+      if (data.co2 >= this.platform.config.co2AlertThreshold) {
         this.platform.Characteristic.CarbonDioxideDetected.CO2_LEVELS_ABNORMAL;
       }
 
