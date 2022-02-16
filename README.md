@@ -2,6 +2,8 @@
 
 A Homebridge plugin for [Aranet4](https://aranet4.com/) devices.
 
+It uses Bluetooth 4 (Low Energy) to connect to the Aranet. 
+
 It reports the CO2 level, humidity and temperature and the device's battery into HomeKit.
 
 It's very much in beta currently (I've only tested this with a single device, on macOS).
