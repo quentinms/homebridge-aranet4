@@ -45,11 +45,11 @@ export class Aranet4Device {
 
   public readonly info: Aranet4DeviceInfo;
 
-  private readonly peripheral: noble.Peripheral;
+  readonly #peripheral: noble.Peripheral;
 
   constructor(logger: Logger, peripheral: noble.Peripheral, info: Aranet4DeviceInfo) {
     this.logger = logger;
-    this.peripheral = peripheral;
+    this.#peripheral = peripheral;
     this.info = info;
   }
 
@@ -73,9 +73,9 @@ export class Aranet4Device {
   }
 
   async waitForPeripheral() {
-    if (this.peripheral.state !== 'connected') {
-      this.logger.debug('Connecting to', this.peripheral.uuid, ':', this.peripheral.state);
-      await this.peripheral.connectAsync();
+    if (this.#peripheral.state !== 'connected') {
+      this.logger.debug('Connecting to', this.#peripheral.uuid, ':', this.#peripheral.state);
+      await this.#peripheral.connectAsync();
     }
   }
 
@@ -152,9 +152,9 @@ export class Aranet4Device {
   async getSensorData(btReadyTimeout: number): Promise<AranetData> {
     await Aranet4Device.waitForBluetooth(this.logger, btReadyTimeout);
     await this.waitForPeripheral();
-    this.logger.debug('Connected to Aranet4', this.peripheral.uuid);
+    this.logger.debug('Connected to Aranet4', this.#peripheral.uuid);
 
-    const { characteristics } = await this.peripheral.discoverSomeServicesAndCharacteristicsAsync(
+    const { characteristics } = await this.#peripheral.discoverSomeServicesAndCharacteristicsAsync(
       [ARANET4_SERVICE], [ARANET4_CHARACTERISTICS],
     );
     if (characteristics.length === 0) {
@@ -172,7 +172,7 @@ export class Aranet4Device {
       'battery': data.readUInt8(7),
     };
 
-    await this.peripheral.disconnectAsync();
+    await this.#peripheral.disconnectAsync();
     return results;
   }
 }
