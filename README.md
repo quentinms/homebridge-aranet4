@@ -6,6 +6,8 @@ It uses Bluetooth 4 (Low Energy) to connect to the Aranet.
 
 It reports the CO2 level, humidity and temperature and the device's battery into HomeKit.
 
+It requires an Aranet device running at least the v1.2.0 firmware.
+
 It's very much in beta currently (I've only tested this with a single device, on macOS).
 If you run into problems, please open an issue.
 
