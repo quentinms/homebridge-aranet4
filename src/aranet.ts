@@ -1,8 +1,8 @@
 import noble from '@abandonware/noble';
 import { TextDecoder } from 'util';
-import {Logger} from 'homebridge';
+import { Logger } from 'homebridge';
 
-const ARANET4_SERVICE = 'f0cd140095da4f4b9ac8aa55d312af0c';
+const ARANET4_SERVICE = '0000fce0-0000-1000-8000-00805f9b34fb';
 const ARANET4_CHARACTERISTICS = 'f0cd300195da4f4b9ac8aa55d312af0c';
 
 const MANUFACTURER_NAME = { name: 'org.bluetooth.characteristic.manufacturer_name_string', id: '2a29' };
