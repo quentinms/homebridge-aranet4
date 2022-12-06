@@ -11,6 +11,12 @@ It requires an Aranet device running at least the v1.2.0 firmware.
 It's very much in beta currently (I've only tested this with a single device, on macOS).
 If you run into problems, please open an issue.
 
+## Common issues
+
+### `Error: Bluetooth is not ready`
+
+On macOS 13 or later, please make sure that `node` has permission to access Bluetooth (in "Privacy & Security").
+
 ------
 
 <p align="center">
