@@ -8,8 +8,22 @@ It reports the CO2 level, humidity and temperature and the device's battery into
 
 It requires an Aranet device running at least the v1.2.0 firmware.
 
+You'll have to manually pair the device with the computer running homebridge before it can be used by this plugin.
+
 It's very much in beta currently (I've only tested this with a single device, on macOS).
 If you run into problems, please open an issue.
+
+## Dependencies
+
+### macOS
+
+`XCode` needs to be installed for the bluetooth library to be compiled.
+
+You can download it from the Mac App Store or from the command line:
+
+```sh
+xcode-select --install
+```
 
 ## Common issues
 
