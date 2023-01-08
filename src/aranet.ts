@@ -63,12 +63,15 @@ export class Aranet4Device {
         return resolve(true);
       }
 
-      noble.on('stateChange', async (state) => {
+      const stateChangeHandler = async (state) => {
         logger.debug(state);
         if (state === 'poweredOn') {
+          // Remove listener to avoid `Possible EventEmitter memory leak detected` warning
+          noble.removeListener('stateChange', stateChangeHandler);
           return resolve(true);
         }
-      });
+      };
+      noble.on('stateChange', stateChangeHandler);
     });
   }
 
