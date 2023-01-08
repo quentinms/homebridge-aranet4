@@ -11,7 +11,7 @@ It requires an Aranet device running at least the v1.2.0 firmware.
 You'll have to manually pair the device with the computer running homebridge before it can be used by this plugin.
 
 It's very much in beta currently (I've only tested this with a single device, on macOS).
-If you run into problems, please open an issue.
+If you run into problems, please start a [discussion](https://github.com/quentinms/homebridge-aranet4/discussions).
 
 ## Dependencies
 
@@ -29,7 +29,12 @@ xcode-select --install
 
 ### `Error: Bluetooth is not ready`
 
-On macOS 13 or later, please make sure that `node` has permission to access Bluetooth (in "Privacy & Security").
+On macOS 13 or later, please make sure that `node` has permission to access Bluetooth (in "Privacy & Security"):
+* Locate where `node` is located (e.g. `which node`).
+* Open the directory where it's located and then drag & drop `node` into the allowed Bluetooth apps list
+ ```sh
+ open -R $(which node)
+ ```
 
 ------
 
