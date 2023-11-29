@@ -40,5 +40,6 @@ Show your Homebridge config.json here, remove any sensitive information.
 * **Node.js Version**: <!-- node -v -->
 * **NPM Version**: <!-- npm -v -->
 * **Operating System**: <!-- Raspbian / Ubuntu / Debian / Windows / macOS / Docker / hb-service -->
+* **Aranet4 Firmware Version**: <!-- Make sure you're on the latest, only 1.2.0 or later is supported -->
 
 <!-- Click the "Preview" tab before you submit to ensure the formatting is correct. -->
